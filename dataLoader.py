@@ -70,7 +70,7 @@ def load_hw_data(data_dir_hw = f"{current_dir}/HWDB1.1tst_gnt", trn_count_hw = 1
 
 # ================= 配置区域 =================
 # 字体文件路径 (请修改为你电脑上的实际路径)
-FONT_PATH = "/usr/local/share/fonts/h/HarmonyOS_Sans_SC_Medium.ttf"  
+FONT_PATH = "/usr/local/share/fonts/h/HarmonyOS_Sans_SC_Light.ttf"  
 
 # 图片参数
 IMAGE_WIDTH = 128
@@ -135,11 +135,83 @@ def generate_images_numpy(trn_count = 10000, val_count = 1000):
         # 4. 转换为 Numpy 数组
         # PIL image 转 numpy 默认 shape 是 (H, W, C)
         img_array = np.array(image)
+
+        # cv2.imshow("binary_image", img_array)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        # raiseerror
         
         if i < trn_count:
             trn_list.append((img_array, 0))
         else:
             val_list.append((img_array, 0))
+
+    # 5. 将列表堆叠成一个大的 numpy 数组
+    # 最终 shape: (num, IMAGE_HEIGHT, IMAGE_WIDTH, 3)
+    #final_array = np.array(image_list, dtype=np.uint8)
+    
+    return trn_list, val_list
+
+def generate_images_alt_numpy(trn_count = 10000, val_count = 1000):
+    """
+    生成指定数量的汉字图片，并以 NumPy 数组形式返回。
+    
+    Args:
+        num (int): 生成图片的数量
+        font_path (str): 字体文件的路径
+        
+    Returns:
+        tuple: (images_array, labels_list)
+            - images_array: shape 为 (num, height, width, 3) 的 uint8 数组
+            - labels_list: 包含对应汉字的列表
+    """
+    
+    # 检查字体文件
+    if not os.path.exists("/usr/share/fonts/truetype/arphic-gkai00mp/gkai00mp.ttf"):
+        raise FileNotFoundError(f"找不到字体文件: {"/usr/share/fonts/truetype/arphic-gkai00mp/gkai00mp.ttf"}，请检查路径配置。")
+
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/arphic-gkai00mp/gkai00mp.ttf", FONT_SIZE)
+    except Exception as e:
+        raise Exception(f"字体加载失败: {e}")
+    
+    num = trn_count + val_count
+
+    #print(f"正在生成 {num} 张图片数据 (内存中)...")
+
+    trn_list = []
+    val_list = []
+
+    for i in range(num):
+        char = chr(random.randint(0x4E00, 0x9FA5))
+        
+        # 1. 创建图片
+        image = Image.new('L', (IMAGE_WIDTH, IMAGE_HEIGHT), BG_COLOR)
+        draw = ImageDraw.Draw(image)
+
+        # 2. 计算居中位置
+        bbox = draw.textbbox((0, 0), char, font=font)
+        text_w = bbox[2] - bbox[0]
+        text_h = bbox[3] - bbox[1]
+        x = (IMAGE_WIDTH - text_w) / 2 - bbox[0]
+        y = (IMAGE_HEIGHT - text_h) / 2 - bbox[1]
+
+        # 3. 绘制文字
+        draw.text((x, y), char, font=font, fill=TEXT_COLOR)
+
+        # 4. 转换为 Numpy 数组
+        # PIL image 转 numpy 默认 shape 是 (H, W, C)
+        img_array = np.array(image)
+
+        # cv2.imshow("binary_image", img_array)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        # raiseerror
+        
+        if i < trn_count:
+            trn_list.append((img_array, 1))
+        else:
+            val_list.append((img_array, 1))
 
     # 5. 将列表堆叠成一个大的 numpy 数组
     # 最终 shape: (num, IMAGE_HEIGHT, IMAGE_WIDTH, 3)

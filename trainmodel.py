@@ -136,10 +136,10 @@ def main():
 
     # A. 准备数据
     # 调用你的函数 (请确保你的函数已经定义或导入)
-    hw_train, hw_val = load_hw_data(
-        data_dir_hw=f"{current_dir}/HWDB1.1tst_gnt", 
-        trn_count_hw=10000, 
-        val_count_hw=1000
+    hw_train, hw_val = generate_images_alt_numpy(
+        # data_dir_hw=f"{current_dir}/HWDB1.1tst_gnt", 
+        trn_count=10000, 
+        val_count=1000
     )
     
     pr_train, pr_val = generate_images_numpy(
