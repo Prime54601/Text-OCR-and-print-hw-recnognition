@@ -26,29 +26,38 @@ def pad_to_square(image, fill_value=255):
     
     return padded_image
 
-def load_hw_data(data_dir_hw = f"{current_dir}/HWDB1.1tst_gnt", trn_count_hw = 10000, val_count_hw = 1000):
+HEADER_SIZE = 10
+
+def load_hw_data(data_dir_hw = f"{current_dir}/HWDB1.1tst_gnt", trn_count = 10000, val_count = 1000):
     hwTrain = []
     hwVal = []
     cnt = 0
-    maxcnt = trn_count_hw + val_count_hw
+    maxcnt = trn_count + val_count
     for file_name in os.listdir(data_dir_hw):
         if file_name.endswith('.gnt'):
             file_path = os.path.join(data_dir_hw, file_name)
             with open(file_path, 'rb') as f:
-                header_size = 10
+                # header_size = 10
                 while True:
-                    header = np.fromfile(f, dtype='uint8', count=header_size)
+
+                    header = np.fromfile(f, dtype='uint8', count=HEADER_SIZE)
                     if not header.size:
                         break
+                    discard = random.randint(0, 10)
+                    if discard != 0:
+                        width = header[6].astype(np.uint16) + (header[7].astype(np.uint16) << 8)
+                        height = header[8].astype(np.uint16) + (header[9].astype(np.uint16) << 8)
+                        np.fromfile(f, dtype='uint8', count=width*height)
+                        continue
 
                     sample_size = header[0].astype(np.uint32) + (header[1].astype(np.uint32) << 8) + (header[2].astype(np.uint32) << 16) + (header[3].astype(np.uint32) << 24)
-                    tagcode = header[5].astype(np.uint16) + (header[4].astype(np.uint16) << 8)
+                    # tagcode = header[5].astype(np.uint16) + (header[4].astype(np.uint16) << 8)
                     width = header[6].astype(np.uint16) + (header[7].astype(np.uint16) << 8)
                     height = header[8].astype(np.uint16) + (header[9].astype(np.uint16) << 8)
 
                     pixel_count = width.astype(np.uint16) * height.astype(np.uint16)
 
-                    if header_size + pixel_count != sample_size:
+                    if HEADER_SIZE + pixel_count != sample_size:
                         break
                     image = np.fromfile(f, dtype='uint8', count=pixel_count).reshape((height, width))
                     binary_image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 2)
@@ -56,7 +65,7 @@ def load_hw_data(data_dir_hw = f"{current_dir}/HWDB1.1tst_gnt", trn_count_hw = 1
                     # cv2.waitKey(0)
                     # cv2.destroyAllWindows()
                     # raiseerror
-                    if cnt < trn_count_hw:
+                    if cnt < trn_count:
                         binary_image = pad_to_square(binary_image)
                         hwTrain.append((binary_image, 1))
                     else:
@@ -136,15 +145,21 @@ def generate_images_numpy(trn_count = 10000, val_count = 1000):
         # PIL image 转 numpy 默认 shape 是 (H, W, C)
         img_array = np.array(image)
 
-        # cv2.imshow("binary_image", img_array)
+        noise = np.random.normal(0, 0.65, img_array.shape)
+        noisy_image = img_array + noise
+        # 确保像素值在有效范围内
+        img_array = np.clip(noisy_image, 0, 255).astype(np.uint8)
+        binary_image = cv2.adaptiveThreshold(img_array, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 2)
+
+        # cv2.imshow("binary_image", binary_image)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
         # raiseerror
         
         if i < trn_count:
-            trn_list.append((img_array, 0))
+            trn_list.append((binary_image, 0))
         else:
-            val_list.append((img_array, 0))
+            val_list.append((binary_image, 0))
 
     # 5. 将列表堆叠成一个大的 numpy 数组
     # 最终 shape: (num, IMAGE_HEIGHT, IMAGE_WIDTH, 3)
@@ -220,9 +235,12 @@ def generate_images_alt_numpy(trn_count = 10000, val_count = 1000):
     return trn_list, val_list
 
 if __name__ == '__main__': #1 for handwritten, 0 for printed
-    trn, val = load_hw_data(trn_count_hw = 70)
+    trn, val = load_hw_data(trn_count = 10)
     trn1, val1 = generate_images_numpy(trn_count = 30, val_count = 10)
-    print(trn[0][0])
+    for i in range(len(trn)):
+        cv2.imshow("binary_image", trn[i][0])
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
     # trn[0] is image, trn[1] is tag
     # print(trn[0][0])
     # print(trn[0][1])

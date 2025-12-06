@@ -8,6 +8,7 @@ import os
 from PIL import Image, ImageFilter
 # 新增导入用于绘图
 import matplotlib.pyplot as plt
+import torchvision.transforms.functional as TF
 
 from dataLoader import *
 
@@ -64,11 +65,11 @@ class CharClassificationDataset(Dataset):
         # 【新增修改】 2. 条件锐化：仅针对手写数据 (label == 1)
         # =============================================
         # 注意：这个步骤必须在 resize 之前进行，以保留原始细节
-        if label == 1:
-            # 使用 PIL 的内置锐化滤镜
-            img = img.filter(ImageFilter.SHARPEN)
-            # 如果觉得不够锐，可以取消下面这行的注释再锐化一次
-            # img = img.filter(ImageFilter.SHARPEN) 
+        # if label == 1:
+        #     # 使用 PIL 的内置锐化滤镜
+        #     img = img.filter(ImageFilter.SHARPEN)
+        #     # 如果觉得不够锐，可以取消下面这行的注释再锐化一次
+        #     # img = img.filter(ImageFilter.SHARPEN) 
 
         if self.transform:
             img = self.transform(img)
@@ -136,7 +137,7 @@ def main():
 
     # A. 准备数据
     # 调用你的函数 (请确保你的函数已经定义或导入)
-    hw_train, hw_val = generate_images_alt_numpy(
+    hw_train, hw_val = load_hw_data(
         # data_dir_hw=f"{current_dir}/HWDB1.1tst_gnt", 
         trn_count=10000, 
         val_count=1000
@@ -168,6 +169,17 @@ def main():
     # 实例化 Dataset 和 DataLoader
     train_dataset = CharClassificationDataset(train_data_raw, transform=transform)
     val_dataset = CharClassificationDataset(val_data_raw, transform=transform)
+
+    # for i in range(10):
+    #     # 获取第一张图像和标签
+    #     image_tensor = train_dataset[i+9995][0]
+    #     # 将张量转换为numpy数组并显示
+    #     image_pil = TF.to_pil_image(image_tensor)
+    #     image_cv = np.array(image_pil)
+    #     cv2.imshow("image", image_cv)
+    #     cv2.waitKey(0)
+    #     cv2.destroyAllWindows()
+    # error
 
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True)
