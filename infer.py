@@ -30,15 +30,13 @@ json_dir = "/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料
 image_dir = "/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/test projects/output/image.jpg"
 box_list, text_list = extract_rec_data(json_dir)
 
-# getimage(box_list[0], image_dir)
-
 # 加载模型
 model = BinaryCNN()
 model.load_state_dict(torch.load("/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/models/handwritten_vs_printed_cnn.pth"))  # 替换为您的模型路径
 model.eval()
 
 # 获取图像
-image = getimage(box_list[6], image_dir)
+image = getimage(box_list[4], image_dir)
 # images = generate_images_numpy(1, 0)
 # image = images[0][0]
 

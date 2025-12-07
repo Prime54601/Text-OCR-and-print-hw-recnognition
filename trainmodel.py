@@ -9,6 +9,7 @@ from PIL import Image, ImageFilter
 # 新增导入用于绘图
 import matplotlib.pyplot as plt
 import torchvision.transforms.functional as TF
+import time
 
 from dataLoader import *
 
@@ -137,16 +138,24 @@ def main():
 
     # A. 准备数据
     # 调用你的函数 (请确保你的函数已经定义或导入)
+    timer = time.time()
     hw_train, hw_val = load_hw_data(
-        # data_dir_hw=f"{current_dir}/HWDB1.1tst_gnt", 
         trn_count=10000, 
         val_count=1000
     )
-    
+    timer_end = time.time()
+    timer = timer_end - timer
+    print(f"手写数据加载完成，耗时 {timer:.2f} 秒")
+    print(f"训练集总数: {len(hw_train)}, 验证集总数: {len(hw_val)}")
+    timer = time.time()
     pr_train, pr_val = generate_images_numpy(
         trn_count=10000, 
         val_count=1000
     )
+    timer_end = time.time()
+    timer = timer_end - timer
+    print(f"印刷数据加载完成，耗时 {timer:.2f} 秒")
+    print(f"训练集总数: {len(pr_train)}, 验证集总数: {len(pr_val)}")
 
     # 合并数据
     train_data_raw = hw_train + pr_train
@@ -221,9 +230,9 @@ def main():
                 images, labels = images.to(DEVICE), labels.to(DEVICE)
                 outputs = model(images)
                 _, predicted = torch.max(outputs.data, 1)
-                print(predicted)
-                print(labels)
-                error
+                # print(predicted)
+                # print(labels)
+                # error
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
         
@@ -262,7 +271,7 @@ def main():
     
     plt.tight_layout()
     plt.savefig('/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/models/training_history.png')
-    plt.show()
+    # plt.show()
 
 if __name__ == '__main__':
     main()
