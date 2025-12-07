@@ -35,6 +35,10 @@ def model_infer(box):
     model.eval()
 
     image = getimage(box, image_dir)
+    image_cv = np.array(image)
+    cv2.imshow("image", image_cv)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     processed_image = preprocess_image(image)
     processed_image = processed_image.unsqueeze(0)
 

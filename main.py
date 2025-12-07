@@ -33,6 +33,16 @@ if __name__ == "__main__":
             print("No more data to append. Aborting!")
             break
         for box, text in zip(rec_boxes, rec_texts):
+            # print(box)
+            # for i in range(len(box)):
+            #     box[i] *= 2
+            # print(box)
+            print(box)
+            image = getimage(box, "/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/test projects/output/image.jpg")
+            image = np.array(image)
+            cv2.imshow("image", image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
             if model_infer(box) == 1: #判断是否为手写文字
                 is_hand_written = True
             else:
@@ -50,4 +60,6 @@ if __name__ == "__main__":
         ws.append(wb_body)
         break #测试用，只处理一张图片
 
+    # os.makedirs(os.path.dirname(path_to_file), exist_ok=True)
+    print(path_to_file)
     wb.save(path_to_file)
