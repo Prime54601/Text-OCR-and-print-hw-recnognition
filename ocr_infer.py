@@ -8,9 +8,9 @@ def init_cam():
     if not camera.isOpened():
         print("无法打开摄像头")
         exit()
-    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
-    camera.set(cv2.CAP_PROP_FPS, 30)
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 4000)
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 3000)
+    camera.set(cv2.CAP_PROP_FPS, 15)
     return camera
 
 def ocr_preprocess(image):
