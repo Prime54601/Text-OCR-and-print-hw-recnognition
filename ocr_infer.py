@@ -21,9 +21,6 @@ def ocr_preprocess(image):
     image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
     # image = cv2.convertScaleAbs(image, alpha=1, beta=-100)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) #转换为BW
-    # cv2.imshow("image", image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
     image = cv2.convertScaleAbs(image, alpha=1.5, beta=0) #增加对比度
     image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 7, 4) #二值化
     image = cv2.medianBlur(image, 3) #去噪
@@ -33,9 +30,6 @@ def ocr_preprocess(image):
     return image
 
 def ocr_inf(camera, ocr):
-    
-    # for i in range(150): #5次预处理
-    #     rat, image = camera.read()
     image = camera.read()[1]
     '''
     image_path = "/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/test projects/test images/WIN_20251110_20_03_44_Pro.jpg" #或许可以换成别的？
