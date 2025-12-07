@@ -32,7 +32,7 @@ def ocr_inf(camera, ocr):
     '''
     image = camera.read()[1]
     '''
-    image_path = "/home/prime54601/Downloads/test1.jpg" #或许可以换成别的？
+    image_path = "/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/test projects/test images/WIN_20251110_20_03_44_Pro.jpg" #或许可以换成别的？
     image = cv2.imread(image_path) #读取图片
     
     image = ocr_preprocess(image)

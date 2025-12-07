@@ -13,7 +13,7 @@ def getimage(box, image_dir):
     image = image.crop(box)
     image = image.convert('L')
     # image.show()
-    return image.crop(box)
+    return image
     
 def preprocess_image(image):
     """
@@ -38,7 +38,7 @@ model.load_state_dict(torch.load("/mnt/data/Class Projects/大一上 工程学�
 model.eval()
 
 # 获取图像
-image = getimage(box_list[1], image_dir)
+image = getimage(box_list[6], image_dir)
 # images = generate_images_numpy(1, 0)
 # image = images[0][0]
 
@@ -53,12 +53,13 @@ processed_image = preprocess_image(image)
 
 image_pil = TF.to_pil_image(processed_image)
 image_cv = np.array(image_pil)
-print(image_cv)
-err
+# print(image_cv)
+# err
 cv2.imshow("image", image_cv)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-raiseerror
+# raiseerror
+processed_image = processed_image.unsqueeze(0)
 
 # 执行推理
 with torch.no_grad():
