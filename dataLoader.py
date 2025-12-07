@@ -118,7 +118,8 @@ def load_hw_data(data_dir_hw = f"{current_dir}/HWDB1.1tst_gnt", trn_count = 1000
 
 # ================= 配置区域 =================
 # 字体文件路径 (请修改为你电脑上的实际路径)
-FONT_PATH = "/usr/local/share/fonts/h/HarmonyOS_Sans_SC_Light.ttf"  
+font_paths  = ["/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/fonts/SimHei.ttf",
+               "/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/fonts/SimSun.ttf"]
 
 # 图片参数
 IMAGE_WIDTH = 128
@@ -126,7 +127,8 @@ IMAGE_HEIGHT = 128
 BG_COLOR = 255  # 白色背景
 
 # 字体参数
-FONT_SIZE = 80
+FONT_SIZE_MIN = 70  # 最小字体大小
+FONT_SIZE_MAX = 90  # 最大字体大小
 TEXT_COLOR = 0      # 黑色文字
 
 # 生成数量
@@ -134,44 +136,39 @@ NUM_IMAGES = 1
 # ===========================================
 
 def generate_images_numpy(trn_count = 10000, val_count = 1000):
-    """
-    生成指定数量的汉字图片，并以 NumPy 数组形式返回。
-    
-    Args:
-        num (int): 生成图片的数量
-        font_path (str): 字体文件的路径
-        
-    Returns:
-        tuple: (images_array, labels_list)
-            - images_array: shape 为 (num, height, width, 3) 的 uint8 数组
-            - labels_list: 包含对应汉字的列表
-    """
     
     # 检查字体文件
-    if not os.path.exists(FONT_PATH):
-        raise FileNotFoundError(f"找不到字体文件: {FONT_PATH}，请检查路径配置。")
-
-    try:
-        font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
-    except Exception as e:
-        raise Exception(f"字体加载失败: {e}")
+    for path in font_paths:
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"找不到字体文件: {path}，请检查路径配置。")
     
     num = trn_count + val_count
-
-    #print(f"正在生成 {num} 张图片数据 (内存中)...")
 
     trn_list = []
     val_list = []
 
     for i in range(num):
-        seqlen = random.randint(1, 7)
+        index = random.randint(0, len(font_paths) - 1)
+        path = font_paths[index]
+        
+        # 随机选择字体粗细（通过调整字体大小实现）
+        font_size = random.randint(FONT_SIZE_MIN, FONT_SIZE_MAX)
+        try:
+            font = ImageFont.truetype(path, font_size)
+        except Exception as e:
+            raise Exception(f"字体加载失败: {e}")
+        # seqlen = random.randint(1, 7)
+        seqlen = 2
         char_list = []
         for j in range(seqlen):
             char = chr(random.randint(0x4E00, 0x9FA5))
             char_list.append(char)
         
         # 1. 创建图片
-        image = Image.new('L', (seqlen * (FONT_SIZE + 10) - 10, IMAGE_HEIGHT), BG_COLOR)
+        image_width = int((seqlen * (font_size + 15) - 10) * 1.5)
+        x_offset = random.randint(-20, 20)
+        y_offset = random.randint(-20, 20)
+        image = Image.new('L', (image_width, int(font_size * 1.5)), BG_COLOR)
         draw = ImageDraw.Draw(image)
 
         # 2. 计算居中位置
@@ -184,19 +181,33 @@ def generate_images_numpy(trn_count = 10000, val_count = 1000):
             bbox = draw.textbbox((0, 0), char, font=font)
             text_w.append(bbox[2]-bbox[0])  #~80
             text_h = max(text_h, bbox[3]-bbox[1])
-        # bbox = draw.textbbox((0, 0), char, font=font)
-        # text_w = bbox[2] - bbox[0]
-        # text_h = bbox[3] - bbox[1]
-        x = (seqlen * (FONT_SIZE + 10) - sum(text_w) - 10 * seqlen) / 2 - init_width
-        y = (IMAGE_HEIGHT - text_h) / 2 - init_height
+        x = (image_width - sum(text_w) - 15 * seqlen + 15) / 2 - init_width + x_offset
+        y = (int(font_size * 1.5) - text_h) / 2 - init_height + y_offset
         # 3. 绘制文字
         for char in char_list:
             draw.text((x, y), char, font=font, fill=TEXT_COLOR)
-            x += text_w[char_list.index(char)] + 10
+            x += text_w[char_list.index(char)] + 15
 
         # 4. 转换为 Numpy 数组
         # PIL image 转 numpy 默认 shape 是 (H, W, C)
         img_array = np.array(image)
+
+        # 添加透视变换效果，模拟倾斜视角
+        rows, cols = img_array.shape
+        # 定义原始点和目标点，创建透视变换矩阵
+        # 随机生成一些偏移量来模拟不同角度的拍摄效果
+        shift_range = 12  # 控制变形程度
+        pts1 = np.float32([[0, 0], [cols, 0], [0, rows], [cols, rows]])
+        pts2 = np.float32([
+            [random.uniform(0, shift_range), random.uniform(0, shift_range)],
+            [cols - random.uniform(0, shift_range), random.uniform(0, shift_range)],
+            [random.uniform(0, shift_range), rows - random.uniform(0, shift_range)],
+            [cols - random.uniform(0, shift_range), rows - random.uniform(0, shift_range)]
+        ])
+        
+        # 计算透视变换矩阵并应用
+        M = cv2.getPerspectiveTransform(pts1, pts2)
+        img_array = cv2.warpPerspective(img_array, M, (cols, rows), flags=cv2.INTER_LINEAR, borderValue=BG_COLOR)
 
         noise = np.random.normal(0, 0.65, img_array.shape)
         noisy_image = img_array + noise
@@ -222,7 +233,7 @@ def generate_images_numpy(trn_count = 10000, val_count = 1000):
     return trn_list, val_list
 
 if __name__ == '__main__': #1 for handwritten, 0 for printed
-    trn, val = load_hw_data(trn_count = 10000, val_count = 1000)
+    # trn, val = load_hw_data(trn_count = 10000, val_count = 1000)
     trn1, val1 = generate_images_numpy(trn_count = 30, val_count = 10)
     # trn[0] is image, trn[1] is tag
     # print(trn[0][0])
