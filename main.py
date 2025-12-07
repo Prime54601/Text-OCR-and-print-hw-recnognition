@@ -20,35 +20,34 @@ is_hand_written = False
 first_time = True
 wb_head = []
 wb_body = []
-
-json_dir = "/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/test projects/output/result.json"
-image_dir = "/mnt/data/Class Projects/大一上 工程学导论/AI组学习资料/test projects/output/image.jpg"
 #======================================================================================================
 
-while 1:
-    ocr_inf(cam, ocr)
-    rec_boxes, rec_texts = extract_rec_data(json_path)
-    wb_body = []
-    # print("boxes: ", rec_boxes)
-    if rec_boxes == []: #若没有找到文字，代表本批表单已经识别完，退出循环
-        print("No more data to append. Aborting!")
-        break
-    for box, text in zip(rec_boxes, rec_texts):
-        if model_infer(box) == 1:
-            is_hand_written = True
-        else:
-            is_hand_written = False
 
-        print(text, is_hand_written)
-        if(is_hand_written == False): #不是手写文字，存入表头
-            wb_head.append(text)
-        if(is_hand_written == True): #手写文字存入表身
-            wb_body.append(text)
+if __name__ == "__main__":
+    while 1:
+        ocr_inf(cam, ocr) #ocr识别并将结果存储在json文件中
+        rec_boxes, rec_texts = extract_rec_data(json_path)
+        wb_body = []
+        # print("boxes: ", rec_boxes)
+        if rec_boxes == []: #若没有找到文字，代表本批表单已经识别完，退出循环
+            print("No more data to append. Aborting!")
+            break
+        for box, text in zip(rec_boxes, rec_texts):
+            if model_infer(box) == 1: #判断是否为手写文字
+                is_hand_written = True
+            else:
+                is_hand_written = False
 
-    if(first_time == True): #表头只导入一次
-        ws.append(wb_head)
-        first_time = False
-    ws.append(wb_body)
-    break #测试用，只处理一张图片
+            print(text, is_hand_written) #调试用，正式使用时记得注释
+            if(is_hand_written == False): #不是手写文字，存入表头
+                wb_head.append(text)
+            if(is_hand_written == True): #手写文字存入表身
+                wb_body.append(text)
 
-wb.save(path_to_file)
+        if(first_time == True): #表头只导入一次
+            ws.append(wb_head)
+            first_time = False
+        ws.append(wb_body)
+        break #测试用，只处理一张图片
+
+    wb.save(path_to_file)
