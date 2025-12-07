@@ -124,15 +124,10 @@ font_paths  = ["/mnt/data/Class Projects/大一上 工程学导论/AI组学习�
 # 图片参数
 IMAGE_WIDTH = 128
 IMAGE_HEIGHT = 128
-BG_COLOR = 255  # 白色背景
 
 # 字体参数
 FONT_SIZE_MIN = 70  # 最小字体大小
 FONT_SIZE_MAX = 90  # 最大字体大小
-TEXT_COLOR = 0      # 黑色文字
-
-# 生成数量
-NUM_IMAGES = 1
 # ===========================================
 
 def generate_images_numpy(trn_count = 10000, val_count = 1000):
@@ -157,18 +152,17 @@ def generate_images_numpy(trn_count = 10000, val_count = 1000):
             font = ImageFont.truetype(path, font_size)
         except Exception as e:
             raise Exception(f"字体加载失败: {e}")
-        # seqlen = random.randint(1, 7)
-        seqlen = 2
+        seqlen = random.randint(1, 7)
         char_list = []
-        for j in range(seqlen):
+        for j in range(seqlen): #加载随机长度的字符组
             char = chr(random.randint(0x4E00, 0x9FA5))
             char_list.append(char)
         
         # 1. 创建图片
         image_width = int((seqlen * (font_size + 15) - 10) * 1.5)
-        x_offset = random.randint(-20, 20)
+        x_offset = random.randint(-20, 20) #随机偏移
         y_offset = random.randint(-20, 20)
-        image = Image.new('L', (image_width, int(font_size * 1.5)), BG_COLOR)
+        image = Image.new('L', (image_width, int(font_size * 1.5)), 255) #空白画布，背景颜色为255
         draw = ImageDraw.Draw(image)
 
         # 2. 计算居中位置
@@ -179,13 +173,13 @@ def generate_images_numpy(trn_count = 10000, val_count = 1000):
         init_height = bbox[1]
         for char in char_list:
             bbox = draw.textbbox((0, 0), char, font=font)
-            text_w.append(bbox[2]-bbox[0])  #~80
+            text_w.append(bbox[2] - bbox[0])  #一个字的宽度
             text_h = max(text_h, bbox[3]-bbox[1])
-        x = (image_width - sum(text_w) - 15 * seqlen + 15) / 2 - init_width + x_offset
+        x = (image_width - sum(text_w) - 15 * seqlen + 15) / 2 - init_width + x_offset #计算字符串左边的边界
         y = (int(font_size * 1.5) - text_h) / 2 - init_height + y_offset
         # 3. 绘制文字
         for char in char_list:
-            draw.text((x, y), char, font=font, fill=TEXT_COLOR)
+            draw.text((x, y), char, font=font, fill=0) #字的颜色为0
             x += text_w[char_list.index(char)] + 15
 
         # 4. 转换为 Numpy 数组
@@ -207,14 +201,14 @@ def generate_images_numpy(trn_count = 10000, val_count = 1000):
         
         # 计算透视变换矩阵并应用
         M = cv2.getPerspectiveTransform(pts1, pts2)
-        img_array = cv2.warpPerspective(img_array, M, (cols, rows), flags=cv2.INTER_LINEAR, borderValue=BG_COLOR)
+        img_array = cv2.warpPerspective(img_array, M, (cols, rows), flags=cv2.INTER_LINEAR, borderValue=255)
 
+        # 添加噪声
         noise = np.random.normal(0, 0.65, img_array.shape)
         noisy_image = img_array + noise
-        # 确保像素值在有效范围内
-        img_array = np.clip(noisy_image, 0, 255).astype(np.uint8)
-        binary_image = cv2.adaptiveThreshold(img_array, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 2)
-        resized_image = cv2.resize(binary_image, (IMAGE_WIDTH, IMAGE_HEIGHT))
+        img_array = np.clip(noisy_image, 0, 255).astype(np.uint8) # 确保像素值在有效范围内
+        binary_image = cv2.adaptiveThreshold(img_array, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 2) #二值化以匹配实际推理用图片
+        resized_image = cv2.resize(binary_image, (IMAGE_WIDTH, IMAGE_HEIGHT)) #缩放以适应模型输入
 
         # cv2.imshow("binary_image", resized_image)
         # cv2.waitKey(0)
@@ -225,16 +219,11 @@ def generate_images_numpy(trn_count = 10000, val_count = 1000):
             trn_list.append((resized_image, 0))
         else:
             val_list.append((resized_image, 0))
-
-    # 5. 将列表堆叠成一个大的 numpy 数组
-    # 最终 shape: (num, IMAGE_HEIGHT, IMAGE_WIDTH, 3)
-    #final_array = np.array(image_list, dtype=np.uint8)
     
     return trn_list, val_list
 
-if __name__ == '__main__': #1 for handwritten, 0 for printed
-    # trn, val = load_hw_data(trn_count = 10000, val_count = 1000)
+if __name__ == '__main__':
+    trn, val = load_hw_data(trn_count = 30, val_count = 10)
     trn1, val1 = generate_images_numpy(trn_count = 30, val_count = 10)
-    # trn[0] is image, trn[1] is tag
-    # print(trn[0][0])
-    # print(trn[0][1])
+    # [0]是图片，[1]是标签
+    # 标签1为手写，0为印刷
