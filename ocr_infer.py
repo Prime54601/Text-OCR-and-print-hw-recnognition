@@ -4,7 +4,7 @@ from paddleocr import PaddleOCR
 import time
 
 def init_cam():
-    camera = cv2.VideoCapture(4, cv2.CAP_V4L2)#可能要改成1？
+    camera = cv2.VideoCapture(4, cv2.CAP_V4L2)
     camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
     if not camera.isOpened():
         print("无法打开摄像头")
